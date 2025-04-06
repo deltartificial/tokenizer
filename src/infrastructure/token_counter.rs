@@ -1,7 +1,9 @@
 use anyhow::{Context as AnyhowContext, Result};
 use html2text::from_read;
+use indicatif::{ProgressBar, ProgressStyle};
 use std::fs;
 use std::path::Path;
+use std::time::{Duration, Instant};
 use tokenizers::tokenizer::Tokenizer;
 
 use crate::domain::entities::{FileType, ModelTokenCount, TokenConfig, TokenCount};
@@ -81,30 +83,86 @@ impl HuggingFaceTokenizerService {
 
 impl TokenCounterService for HuggingFaceTokenizerService {
     fn count_tokens(&self, filepath: &Path, config: &TokenConfig) -> Result<TokenCount> {
+        let start_time = Instant::now();
         let file_type = Self::get_file_extension(filepath).unwrap_or(FileType::Unknown);
 
+        let filename = filepath
+            .file_name()
+            .and_then(|name| name.to_str())
+            .unwrap_or("unknown");
+
+        let pb = ProgressBar::new(100);
+        pb.set_style(
+            ProgressStyle::default_bar()
+                .template("[{elapsed_precise}] [{bar:40.cyan/blue}] {msg}")
+                .unwrap()
+                .progress_chars("█▇▆▅▄▃▂▁  "),
+        );
+        pb.set_message(format!("Processing {}...", filename));
+        pb.set_position(10);
+
         let content = match file_type {
-            FileType::Text | FileType::Markdown => self.read_text_file(filepath)?,
-            FileType::Html => self.read_html_file(filepath)?,
-            FileType::Pdf => self.read_pdf_file(filepath)?,
+            FileType::Text | FileType::Markdown => {
+                pb.set_message(format!("Reading {} as text...", filename));
+                pb.set_position(20);
+                let content = self.read_text_file(filepath)?;
+                pb.set_position(40);
+                content
+            }
+            FileType::Html => {
+                pb.set_message(format!("Reading {} as HTML...", filename));
+                pb.set_position(20);
+                let content = self.read_html_file(filepath)?;
+                pb.set_position(40);
+                content
+            }
+            FileType::Pdf => {
+                pb.set_message(format!("Reading {} as PDF...", filename));
+                pb.set_position(20);
+                let content = self.read_pdf_file(filepath)?;
+                pb.set_position(40);
+                content
+            }
             FileType::Unknown => {
+                pb.finish_with_message(format!("Unknown file type: {}", filename));
                 return Err(anyhow::anyhow!(
                     "Unsupported file type: {}",
                     filepath.display()
-                ))
+                ));
             }
         };
 
+        pb.set_message(format!("Tokenizing {} content...", filename));
+        pb.set_position(60);
         let token_counts = self.count_content_tokens(&content, config)?;
+        pb.set_position(90);
+
+        pb.set_message(format!("Finalizing results for {}...", filename));
+        let elapsed = start_time.elapsed();
+        pb.finish_with_message(format!(
+            "Processed {} in {}",
+            filename,
+            format_duration(elapsed)
+        ));
 
         Ok(TokenCount {
-            filename: filepath
-                .file_name()
-                .and_then(|name| name.to_str())
-                .unwrap_or("unknown")
-                .to_string(),
+            filename: filename.to_string(),
             file_type,
             token_counts,
+            processing_time: elapsed,
         })
+    }
+}
+
+pub fn format_duration(duration: Duration) -> String {
+    let secs = duration.as_secs_f64();
+    if secs < 1.0 {
+        format!("{} ms", (secs * 1000.0).round() as u64)
+    } else if secs < 60.0 {
+        format!("{:.2} s", secs)
+    } else {
+        let minutes = (secs / 60.0).floor() as u64;
+        let remaining_secs = secs - (minutes * 60) as f64;
+        format!("{}m {:.2}s", minutes, remaining_secs)
     }
 }

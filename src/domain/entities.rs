@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::time::Duration;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TokenModel {
@@ -17,6 +18,7 @@ pub struct TokenCount {
     pub filename: String,
     pub file_type: FileType,
     pub token_counts: Vec<ModelTokenCount>,
+    pub processing_time: Duration,
 }
 
 #[derive(Debug, Clone)]

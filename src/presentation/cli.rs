@@ -5,6 +5,7 @@ use std::path::PathBuf;
 use crate::application::use_cases::CountTokensUseCase;
 use crate::domain::entities::TokenCount;
 use crate::domain::ports::{ConfigRepository, TokenCounterService};
+use crate::infrastructure::token_counter::format_duration;
 
 #[derive(Parser)]
 #[command(name = "tokenizer")]
@@ -60,8 +61,12 @@ where
     }
 
     fn display_token_count(&self, token_count: &TokenCount) {
-        println!("File: {}", token_count.filename);
-        println!("Type: {:?}", token_count.file_type);
+        println!("\nResults for: {}", token_count.filename);
+        println!("File type: {:?}", token_count.file_type);
+        println!(
+            "Processing time: {}",
+            format_duration(token_count.processing_time)
+        );
         println!("\nToken counts by model:");
         println!(
             "{:<20} {:<12} {:<20}",
