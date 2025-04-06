@@ -54,6 +54,46 @@
       "name": "bert-base",
       "context_length": 512,
       "encoding": "bert"
+    },
+    {
+      "name": "llama-3-8b",
+      "context_length": 8000,
+      "encoding": "llama"
+    },
+    {
+      "name": "llama-3-70b",
+      "context_length": 8000,
+      "encoding": "llama"
+    },
+    {
+      "name": "llama-3.1-405b",
+      "context_length": 128000,
+      "encoding": "llama"
+    },
+    {
+      "name": "llama-4-scout",
+      "context_length": 10000000,
+      "encoding": "llama"
+    },
+    {
+      "name": "llama-4-maverick",
+      "context_length": 10000000,
+      "encoding": "llama"
+    },
+    {
+      "name": "claude-3.7-sonnet",
+      "context_length": 200000,
+      "encoding": "claude"
+    },
+    {
+      "name": "gpt-4.5-preview",
+      "context_length": 128000,
+      "encoding": "tiktoken"
+    },
+    {
+      "name": "o3-mini",
+      "context_length": 200000,
+      "encoding": "openai"
     }
   ]
 }
