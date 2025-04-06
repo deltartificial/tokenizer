@@ -31,6 +31,7 @@ pub enum FileType {
     Text,
     Markdown,
     Pdf,
+    Html,
     Unknown,
 }
 
@@ -40,6 +41,7 @@ impl From<&str> for FileType {
             "txt" => FileType::Text,
             "md" => FileType::Markdown,
             "pdf" => FileType::Pdf,
+            "html" | "htm" => FileType::Html,
             _ => FileType::Unknown,
         }
     }

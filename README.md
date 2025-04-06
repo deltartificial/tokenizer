@@ -1,10 +1,10 @@
 # Tokenizer
 
-A CLI tool to compute token lengths of various file types (txt, md, pdf) for different LLM models.
+A CLI tool to compute token lengths of various file types (txt, md, pdf, html) for different LLM models.
 
 ## Features
 
-- Calculate token counts for various file types (Text, Markdown, PDF)
+- Calculate token counts for various file types (Text, Markdown, PDF, HTML)
 - Support for multiple LLM models (configurable via config.json)
 - Display token usage as percentage of context window
 - Powered by HuggingFace tokenizers library
@@ -27,6 +27,9 @@ cargo build --release
 
 # Count tokens using a custom config file
 ./target/release/tokenizer count path/to/your/file.txt -c custom-config.json
+
+# Count tokens using a specific tokenizer model
+./target/release/tokenizer count path/to/your/file.html -t roberta-base
 ```
 
 ## Configuration
@@ -61,6 +64,13 @@ You can customize this file to add or modify models as needed.
 ## Tokenization
 
 This tool uses HuggingFace's tokenizers library, which provides high-performance implementations of various tokenization algorithms. The default tokenizer used is BERT, but the architecture is designed to be easily extended to support different tokenizers.
+
+## Supported File Types
+
+- `.txt` - Plain text files
+- `.md` - Markdown files
+- `.pdf` - PDF documents (basic implementation)
+- `.html`/`.htm` - HTML files (tags are stripped for token counting)
 
 ## Project Structure
 

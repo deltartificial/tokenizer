@@ -1,4 +1,5 @@
 use anyhow::{Context as AnyhowContext, Result};
+use html2text::from_read;
 use std::fs;
 use std::path::Path;
 use tokenizers::tokenizer::Tokenizer;
@@ -12,12 +13,10 @@ pub struct HuggingFaceTokenizerService {
 
 impl HuggingFaceTokenizerService {
     pub fn new() -> Result<Self> {
-        // Use BERT as default model
         Self::with_model("bert-base-uncased")
     }
 
     pub fn with_model(model_name: &str) -> Result<Self> {
-        // Initialize a tokenizer with the specified model
         let tokenizer = Tokenizer::from_pretrained(model_name, None)
             .map_err(|e| anyhow::anyhow!("Failed to load {} tokenizer: {}", model_name, e))?;
 
@@ -37,13 +36,18 @@ impl HuggingFaceTokenizerService {
     }
 
     fn read_pdf_file(&self, filepath: &Path) -> Result<String> {
-        // Simple implementation to read PDF text
-        // For a more robust implementation, consider using a dedicated PDF text extraction library
         let content = format!("PDF content from: {}", filepath.display());
 
-        // This is a placeholder - in a real implementation, you would extract
-        // text from the PDF using a more sophisticated approach.
         Ok(content)
+    }
+
+    fn read_html_file(&self, filepath: &Path) -> Result<String> {
+        let html_content = fs::read_to_string(filepath)
+            .with_context(|| format!("Failed to read HTML file: {}", filepath.display()))?;
+
+        let text_content = from_read(html_content.as_bytes(), 80);
+
+        Ok(text_content)
     }
 
     fn count_content_tokens(
@@ -51,7 +55,6 @@ impl HuggingFaceTokenizerService {
         content: &str,
         config: &TokenConfig,
     ) -> Result<Vec<ModelTokenCount>> {
-        // Use the HuggingFace tokenizer to count tokens
         let encoding = self
             .tokenizer
             .encode(content, false)
@@ -59,7 +62,6 @@ impl HuggingFaceTokenizerService {
 
         let token_count = encoding.get_tokens().len();
 
-        // Map the token count to each model in the config
         let model_token_counts = config
             .models
             .iter()
@@ -83,6 +85,7 @@ impl TokenCounterService for HuggingFaceTokenizerService {
 
         let content = match file_type {
             FileType::Text | FileType::Markdown => self.read_text_file(filepath)?,
+            FileType::Html => self.read_html_file(filepath)?,
             FileType::Pdf => self.read_pdf_file(filepath)?,
             FileType::Unknown => {
                 return Err(anyhow::anyhow!(

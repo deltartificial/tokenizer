@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tokenizer Test HTML File</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 40px;
+        line-height: 1.6;
+      }
+      h1 {
+        color: #333;
+      }
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>HTML Tokenization Test</h1>
+      <p>
+        This is a sample HTML file to test our tokenizer's ability to handle
+        HTML content.
+      </p>
+
+      <h2>What are tokens?</h2>
+      <p>
+        In natural language processing, tokens are the basic units that models
+        process. They can be:
+      </p>
+      <ul>
+        <li>Words</li>
+        <li>Subwords</li>
+        <li>Characters</li>
+        <li>Punctuation</li>
+      </ul>
+
+      <h2>Different models tokenize text differently</h2>
+      <p>Here are some examples:</p>
+      <table border="1">
+        <tr>
+          <th>Model</th>
+          <th>Tokenization Style</th>
+        </tr>
+        <tr>
+          <td>BERT</td>
+          <td>WordPiece</td>
+        </tr>
+        <tr>
+          <td>GPT</td>
+          <td>Byte-Pair Encoding (BPE)</td>
+        </tr>
+        <tr>
+          <td>LLaMA</td>
+          <td>SentencePiece with BPE</td>
+        </tr>
+      </table>
+
+      <p>
+        Our tokenizer should be able to extract the text content from this HTML
+        file, ignoring the HTML tags, and count the tokens accurately.
+      </p>
+
+      <p>
+        <strong>Note:</strong> The token count should be different from the raw
+        HTML file size, as HTML tags are removed in the process.
+      </p>
+    </div>
+  </body>
+</html>
