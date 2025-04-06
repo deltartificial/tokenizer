@@ -1,5 +1,5 @@
-use std::path::Path;
 use anyhow::Result;
+use std::path::Path;
 
 use crate::domain::entities::{TokenConfig, TokenCount};
 
@@ -9,4 +9,4 @@ pub trait ConfigRepository {
 
 pub trait TokenCounterService {
     fn count_tokens(&self, filepath: &Path, config: &TokenConfig) -> Result<TokenCount>;
-} 
+}

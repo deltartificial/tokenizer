@@ -43,4 +43,4 @@ impl From<&str> for FileType {
             _ => FileType::Unknown,
         }
     }
-} 
+}

@@ -1,5 +1,5 @@
-use std::path::Path;
 use anyhow::Result;
+use std::path::Path;
 
 use crate::domain::entities::TokenCount;
 use crate::domain::ports::{ConfigRepository, TokenCounterService};
@@ -25,4 +25,4 @@ where
         let config = self.config_repository.load_config()?;
         self.token_counter_service.count_tokens(filepath, &config)
     }
-} 
+}

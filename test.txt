@@ -1,0 +1,15 @@
+This is a sample text file to test our tokenizer.
+
+The tokenizer will count the number of tokens in this file and display
+the results for various language models.
+
+Tokenization is an important step in natural language processing.
+It involves breaking text into smaller units called tokens,
+which can be words, subwords, or characters depending on the algorithm used.
+
+Different models use different tokenization schemes:
+- GPT models use tiktoken
+- BERT models use WordPiece
+- LLaMA models use SentencePiece with BPE
+
+This file should help us test our implementation. 

@@ -1,6 +1,6 @@
+use anyhow::{Context as AnyhowContext, Result};
 use std::fs;
 use std::path::Path;
-use anyhow::{Context as AnyhowContext, Result};
 use tokenizers::tokenizer::Tokenizer;
 
 use crate::domain::entities::{FileType, ModelTokenCount, TokenConfig, TokenCount};
@@ -12,10 +12,15 @@ pub struct HuggingFaceTokenizerService {
 
 impl HuggingFaceTokenizerService {
     pub fn new() -> Result<Self> {
-        // Initialize a BERT tokenizer - we could make this configurable in the future
-        let tokenizer = Tokenizer::from_pretrained("bert-base-uncased", None)
-            .map_err(|e| anyhow::anyhow!("Failed to load BERT tokenizer: {}", e))?;
-            
+        // Use BERT as default model
+        Self::with_model("bert-base-uncased")
+    }
+
+    pub fn with_model(model_name: &str) -> Result<Self> {
+        // Initialize a tokenizer with the specified model
+        let tokenizer = Tokenizer::from_pretrained(model_name, None)
+            .map_err(|e| anyhow::anyhow!("Failed to load {} tokenizer: {}", model_name, e))?;
+
         Ok(Self { tokenizer })
     }
 
@@ -35,20 +40,25 @@ impl HuggingFaceTokenizerService {
         // Simple implementation to read PDF text
         // For a more robust implementation, consider using a dedicated PDF text extraction library
         let content = format!("PDF content from: {}", filepath.display());
-        
+
         // This is a placeholder - in a real implementation, you would extract
-        // text from the PDF. However, the current PDF library doesn't have a simple
-        // API for text extraction that works with our setup.
+        // text from the PDF using a more sophisticated approach.
         Ok(content)
     }
 
-    fn count_content_tokens(&self, content: &str, config: &TokenConfig) -> Result<Vec<ModelTokenCount>> {
+    fn count_content_tokens(
+        &self,
+        content: &str,
+        config: &TokenConfig,
+    ) -> Result<Vec<ModelTokenCount>> {
         // Use the HuggingFace tokenizer to count tokens
-        let encoding = self.tokenizer.encode(content, false)
+        let encoding = self
+            .tokenizer
+            .encode(content, false)
             .map_err(|e| anyhow::anyhow!("Failed to encode content with tokenizer: {}", e))?;
-            
+
         let token_count = encoding.get_tokens().len();
-        
+
         // Map the token count to each model in the config
         let model_token_counts = config
             .models
@@ -62,7 +72,7 @@ impl HuggingFaceTokenizerService {
                 }
             })
             .collect();
-            
+
         Ok(model_token_counts)
     }
 }
@@ -70,7 +80,7 @@ impl HuggingFaceTokenizerService {
 impl TokenCounterService for HuggingFaceTokenizerService {
     fn count_tokens(&self, filepath: &Path, config: &TokenConfig) -> Result<TokenCount> {
         let file_type = Self::get_file_extension(filepath).unwrap_or(FileType::Unknown);
-        
+
         let content = match file_type {
             FileType::Text | FileType::Markdown => self.read_text_file(filepath)?,
             FileType::Pdf => self.read_pdf_file(filepath)?,
@@ -81,9 +91,9 @@ impl TokenCounterService for HuggingFaceTokenizerService {
                 ))
             }
         };
-        
+
         let token_counts = self.count_content_tokens(&content, config)?;
-        
+
         Ok(TokenCount {
             filename: filepath
                 .file_name()
@@ -94,4 +104,4 @@ impl TokenCounterService for HuggingFaceTokenizerService {
             token_counts,
         })
     }
-} 
+}
