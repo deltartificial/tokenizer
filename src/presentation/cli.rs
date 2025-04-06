@@ -3,7 +3,7 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 
 use crate::application::use_cases::CountTokensUseCase;
-use crate::domain::entities::{FileType, TokenCount};
+use crate::domain::entities::TokenCount;
 use crate::domain::ports::{ConfigRepository, TokenCounterService};
 
 #[derive(Parser)]

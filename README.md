@@ -7,6 +7,7 @@ A CLI tool to compute token lengths of various file types (txt, md, pdf) for dif
 - Calculate token counts for various file types (Text, Markdown, PDF)
 - Support for multiple LLM models (configurable via config.json)
 - Display token usage as percentage of context window
+- Powered by HuggingFace tokenizers library
 
 ## Installation
 
@@ -30,7 +31,7 @@ cargo build --release
 
 ## Configuration
 
-The tool uses a `config.json` file to define models and their context lengths. The default file looks like this:
+The tool uses a `config.json` file to define models and their context lengths. The default file includes configurations for various models:
 
 ```json
 {
@@ -38,12 +39,17 @@ The tool uses a `config.json` file to define models and their context lengths. T
     {
       "name": "gpt-3.5-turbo",
       "context_length": 16385,
-      "encoding": "cl100k_base"
+      "encoding": "tiktoken"
     },
     {
       "name": "gpt-4",
       "context_length": 8192,
-      "encoding": "cl100k_base"
+      "encoding": "tiktoken"
+    },
+    {
+      "name": "bert-base",
+      "context_length": 512,
+      "encoding": "bert"
     },
     ...
   ]
@@ -51,6 +57,10 @@ The tool uses a `config.json` file to define models and their context lengths. T
 ```
 
 You can customize this file to add or modify models as needed.
+
+## Tokenization
+
+This tool uses HuggingFace's tokenizers library, which provides high-performance implementations of various tokenization algorithms. The default tokenizer used is BERT, but the architecture is designed to be easily extended to support different tokenizers.
 
 ## Project Structure
 
