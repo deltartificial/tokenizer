@@ -1,17 +1,23 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 use anyhow::{Context, Result};
-use pdf::file::File as PdfFile;
-use tiktoken_rs::cl100k_base;
+use pdf::{file::FileOptions, content::Content, object::*};
+use tokenizers::tokenizer::{Tokenizer, EncodeInput};
 
 use crate::domain::entities::{FileType, ModelTokenCount, TokenConfig, TokenCount};
 use crate::domain::ports::TokenCounterService;
 
-pub struct TiktokenCounterService {}
+pub struct HuggingFaceTokenizerService {
+    tokenizer: Tokenizer,
+}
 
-impl TiktokenCounterService {
-    pub fn new() -> Self {
-        Self {}
+impl HuggingFaceTokenizerService {
+    pub fn new() -> Result<Self> {
+        // Initialize a BERT tokenizer - we could make this configurable in the future
+        let tokenizer = Tokenizer::from_pretrained("bert-base-uncased", None)
+            .context("Failed to load BERT tokenizer")?;
+            
+        Ok(Self { tokenizer })
     }
 
     fn get_file_extension(filepath: &Path) -> Option<FileType> {
@@ -27,16 +33,20 @@ impl TiktokenCounterService {
     }
 
     fn read_pdf_file(&self, filepath: &Path) -> Result<String> {
-        let pdf = PdfFile::open(filepath)
+        let file = FileOptions::cached().open(filepath)
             .with_context(|| format!("Failed to open PDF file: {}", filepath.display()))?;
         
         let mut content = String::new();
         
-        for page_index in 0..pdf.num_pages() {
-            if let Ok(page) = pdf.get_page(page_index) {
-                if let Ok(text) = page.text() {
-                    content.push_str(&text);
-                    content.push('\n');
+        for page_index in 0..file.num_pages() {
+            if let Some(page) = file.get_page(page_index) {
+                if let Ok(contents) = page.contents() {
+                    if let Content::Stream(stream) = contents {
+                        if let Ok(text) = stream.decode() {
+                            content.push_str(&String::from_utf8_lossy(&text));
+                            content.push('\n');
+                        }
+                    }
                 }
             }
         }
@@ -44,12 +54,15 @@ impl TiktokenCounterService {
         Ok(content)
     }
 
-    fn count_content_tokens(&self, content: &str, config: &TokenConfig) -> Vec<ModelTokenCount> {
-        let bpe = cl100k_base().expect("Failed to load cl100k_base tokenizer");
-        let tokens = bpe.encode_with_special_tokens(content);
-        let token_count = tokens.len();
+    fn count_content_tokens(&self, content: &str, config: &TokenConfig) -> Result<Vec<ModelTokenCount>> {
+        // Use the HuggingFace tokenizer to count tokens
+        let encoding = self.tokenizer.encode(content, false)
+            .context("Failed to encode content with tokenizer")?;
+            
+        let token_count = encoding.get_tokens().len();
         
-        config
+        // Map the token count to each model in the config
+        let model_token_counts = config
             .models
             .iter()
             .map(|model| {
@@ -60,11 +73,13 @@ impl TiktokenCounterService {
                     percentage_of_context: percentage,
                 }
             })
-            .collect()
+            .collect();
+            
+        Ok(model_token_counts)
     }
 }
 
-impl TokenCounterService for TiktokenCounterService {
+impl TokenCounterService for HuggingFaceTokenizerService {
     fn count_tokens(&self, filepath: &Path, config: &TokenConfig) -> Result<TokenCount> {
         let file_type = Self::get_file_extension(filepath).unwrap_or(FileType::Unknown);
         
@@ -79,7 +94,7 @@ impl TokenCounterService for TiktokenCounterService {
             }
         };
         
-        let token_counts = self.count_content_tokens(&content, config);
+        let token_counts = self.count_content_tokens(&content, config)?;
         
         Ok(TokenCount {
             filename: filepath
