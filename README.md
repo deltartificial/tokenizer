@@ -14,7 +14,7 @@ A CLI tool to compute token lengths of various file types (txt, md, pdf) for dif
 Clone the repository and build the project:
 
 ```bash
-git clone https://github.com/yourusername/tokenizer.git
+git clone https://github.com/deltartificial/tokenizer.git
 cd tokenizer
 cargo build --release
 ```
